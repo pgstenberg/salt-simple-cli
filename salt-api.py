@@ -203,6 +203,7 @@ def main():
         print(
             "url username password hook tag [success_tag] " +
             "[failure_tag] [arguments]")
+        sys.exit()
 
     url = sys.argv[1]
     username = sys.argv[2]
