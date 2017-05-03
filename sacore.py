@@ -144,6 +144,14 @@ def handle_hook(
         log_tag,
         arguments):
 
+    def find_data(key, data):
+        if key in data:
+            return data[key]
+        elif 'data' in data:
+            return find_data(key, data['data'])
+        else:
+            return False
+
     stream = connection.event_stream()
     hook_response = connection.send_hook(tag, arguments)
 
@@ -178,13 +186,11 @@ def handle_hook(
         if 'data: ' in line and show_next:
             try:
                 event_data = json.loads(line.replace('data: ', ''))
-                if (True
-                        and 'data' in event_data
-                        and 'message' in event_data['data']
-                        and '_stamp' in event_data['data']):
+                if (find_data('message', event_data)
+                        and find_data('_stamp', event_data)):
                     print("{} - {}".format(
-                        event_data['data']['_stamp'],
-                        event_data['data']['message']))
+                        find_data('_stamp', event_data),
+                        find_data('message', event_data)))
                 else:
                     print(json.dumps(event_data))
             except ValueError:
