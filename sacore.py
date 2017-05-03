@@ -2,6 +2,7 @@ import requests
 import json
 import sys
 import threading
+import os
 
 from pygments import highlight
 from pygments.lexers import JsonLexer
@@ -83,17 +84,17 @@ class SaltConnection(object):
 
         return response
 
-    def send_hook(self, tag, arguments={}, headers=DEFAULT_HEADERS):
+    def send_hook(self, tag, arguments, headers=DEFAULT_HEADERS):
 
         response = self.session.post(
             '{}/hook/{}'.format(self.url, tag),
-            data=json.dumps(arguments),
+            data=arguments,
             headers=headers)
 
         return response
 
 
-def handle_command(connection, function, target, arguments={}):
+def handle_command(connection, function, target, arguments):
     stream = connection.event_stream()
     command_response = connection.send_command(
         function=function,
@@ -141,7 +142,8 @@ def handle_hook(
         success_tag,
         failure_tag,
         log_tag,
-        arguments={}):
+        arguments):
+
     stream = connection.event_stream()
     hook_response = connection.send_hook(tag, arguments)
 
@@ -162,13 +164,13 @@ def handle_hook(
         if 'tag: ' in line:
             tag = line.replace('tag: ', '')
             # Success Event
-            if tag.find(success_tag) != -1 and success_tag is not None:
+            if success_tag is not None and tag.find(success_tag) != -1:
                 print("Successfull tag was received!")
                 return
             # Failure Event
-            elif tag.find(failure_tag) != -1 and failure_tag is not None:
+            elif failure_tag is not None and tag.find(failure_tag) != -1:
                 sys.exit('Failure tag was received.')
-            elif tag.find(log_tag) != -1 and log_tag is not None:
+            elif log_tag is not None and tag.find(log_tag) != -1:
                 show_next = True
             else:
                 show_next = False
@@ -177,11 +179,12 @@ def handle_hook(
             try:
                 event_data = json.loads(line.replace('data: ', ''))
                 if (True
-                        and 'message' in event_data
-                        and '_stamp' in event_data):
+                        and 'data' in event_data
+                        and 'message' in event_data['data']
+                        and '_stamp' in event_data['data']):
                     print("{} - {}".format(
-                        event_data['_stamp'],
-                        event_data['message']))
+                        event_data['data']['_stamp'],
+                        event_data['data']['message']))
                 else:
                     print(json.dumps(event_data))
             except ValueError:
@@ -198,7 +201,8 @@ def thread(target, args):
         if not t.isAlive():
             return
 
-        raise SaltException('Timeout.')
+        print("Timeout was reached, force exit application!")
+        os._exit(1)
 
     except SaltException as e:
         sys.exit(e)

@@ -6,7 +6,7 @@ def main_command(
         conn,
         target,
         action,
-        arguments={}):
+        arguments='{}'):
     salt.thread(target=salt.handle_command, args=(
         conn,
         action,
@@ -18,11 +18,11 @@ def main_hook(
         conn,
         tag,
         success=None,
-        failure=None,
+        fail=None,
         log=None,
-        arguments={}):
+        arguments='{}'):
 
-    if success is None and failure is None and log is None:
+    if success is None and fail is None and log is None:
         hook_response = conn.send_hook(tag, arguments)
         if hook_response.status_code != 200:
             sys.exit('Hook responded unsuccessfully [{}]:{}'.format(
@@ -35,7 +35,7 @@ def main_hook(
         conn,
         tag,
         success,
-        failure,
+        fail,
         log,
         arguments))
 
@@ -55,7 +55,9 @@ if __name__ == "__main__":
     parser.add_argument(
         '-p',
         '--password',
-        help='Password used during authentication.',
+        help='Password used during authentication. \
+            If no password will be giving during username input, \
+            it will be prompt.',
         default=None)
     parser.add_argument(
         '-a',
@@ -85,7 +87,7 @@ if __name__ == "__main__":
         '-args',
         '--arguments',
         help='Arguments to pass with the command.',
-        default={})
+        default='{}')
 
     # Hook command
     parser_hook = subparsers.add_parser(
@@ -99,7 +101,7 @@ if __name__ == "__main__":
         '-args',
         '--arguments',
         help='Arguments to pass with the hook.',
-        default={})
+        default='{}')
     parser_hook.add_argument(
         '--success',
         help='The successfull tag.',
@@ -114,11 +116,16 @@ if __name__ == "__main__":
         default=None)
 
     try:
+        import getpass
+
         args = vars(parser.parse_args())
 
         conn = salt.SaltConnection(args['url'])
 
-        if args['username'] is not None and args['password'] is not None:
+        if args['username'] is not None:
+            if args['password'] is None:
+                args['password'] = getpass.getpass('{} password: '.format(
+                    args['username']))
             session_response = conn.create_session(
                 username=args['username'],
                 password=args['password'],
