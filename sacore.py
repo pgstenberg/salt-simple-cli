@@ -51,12 +51,11 @@ class SaltConnection(object):
 
         return response
 
-    def event_stream(self, timeout=20, headers=DEFAULT_HEADERS):
+    def event_stream(self, headers=DEFAULT_HEADERS):
 
         response = self.session.get(
             '{}/events'.format(self.url),
-            stream=True,
-            timeout=timeout)
+            stream=True)
 
         if response.encoding is None:
             response.encoding = 'utf-8'
