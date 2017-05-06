@@ -196,12 +196,12 @@ def handle_hook(
                 print("Unable to show log event {}".format(line))
 
 
-def thread(target, args):
+def thread(target, args, timeout=60*5):
     try:
         t = threading.Thread(target=target, args=args)
         t.start()
 
-        t.join(timeout=60)
+        t.join(timeout=timeout)
 
         if not t.isAlive():
             return
