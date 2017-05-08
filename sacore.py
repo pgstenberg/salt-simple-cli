@@ -123,9 +123,12 @@ def handle_command(connection, function, target, arguments):
             if 'jid' in event_data and 'id' in event_data:
                 if event_data['id'] in expected_minions \
                         and event_data['jid'] == jid:
-                    expected_minions.remove(event_data['id'])
-                    prettyPrint({event_data['id']: event_data['return']})
-                    if not event_data['success']:
+                    if 'return' in event_data:
+                        prettyPrint({event_data['id']: event_data['return']})
+                        expected_minions.remove(event_data['id'])
+                    elif 'data' in event_data:
+                        prettyPrint({event_data['id']: event_data['data']})
+                    if 'success' in event_data and not event_data['success']:
                         success = False
 
         if not expected_minions:
