@@ -179,6 +179,7 @@ def handle_hook(
                 return
             # Failure Event
             elif failure_tag is not None and tag.find(failure_tag) != -1:
+                print("Failure tag was received!")
                 sys.exit('Failure tag was received.')
             elif log_tag is not None and tag.find(log_tag) != -1:
                 show_next = True
